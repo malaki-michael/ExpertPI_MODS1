@@ -1,0 +1,2 @@
+class FutureModelException(Exception):
+    pass

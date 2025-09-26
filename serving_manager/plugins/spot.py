@@ -1,0 +1,160 @@
+import base64
+import glob
+import io
+import os
+import tempfile
+
+import cv2
+import h5py
+import numpy as np
+import requests
+
+
+def detect_spot_image(host, port, image, timeout):
+    """
+    Detects spots in an image using the spot detection plugin.
+
+    Args:
+        host (str): The host of the serving manager.
+        port (int): The port of the serving manager.
+        image (np.ndarray): The image to detect spots in.
+        timeout (int): The timeout for the request.
+
+    Returns:
+        np.ndarray: The detected spots.
+    """
+    _, buffer = cv2.imencode('.tif', image)
+    image_bytes = np.array(buffer).tobytes()
+    response = requests.post(
+        f"http://{host}:{port}/spot/detect_image",
+        files={"image": ("image.tif", image_bytes, "image/tif")},
+        timeout=timeout
+    )
+    return np.array(response.json()["result"])[0, ...]
+
+
+def detect_spot_batched(host, port, images, use_tempfile=False):
+    """
+    Detects spots in an image using the spot detection plugin.
+
+    Args:
+        host (str): The host of the serving manager.
+        port (int): The port of the serving manager.
+        images (np.ndarray | list[np.ndarray]): The images to detect spots in. Images should be in shape [B, H, W],
+            where B is the batch size, H is the height of the image, and W is the width of the image. Other possible
+            input is list of [H, W] images.
+
+    Returns:
+        np.ndarray: The detected spots.
+    """
+    if isinstance(images, list):
+        images = np.stack(images)
+    if use_tempfile:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with h5py.File(os.path.join(tmpdir, "hdf.h5"), "w") as hdf:
+                hdf.create_dataset("images", data=images)
+            with open(os.path.join(tmpdir, "hdf.h5"), "rb") as f:
+                response = requests.post(
+                    f"http://{host}:{port}/spot/detect_images_hdf",
+                    files={"hdf_file": f},
+                    timeout=1000
+                )
+    else:
+        io_bytes = io.BytesIO()
+        with h5py.File(io_bytes, "w") as hdf:
+            hdf.create_dataset("images", data=images)
+        io_bytes.seek(0)
+        response = requests.post(
+            f"http://{host}:{port}/spot/detect_images_hdf",
+            files={"hdf_file": io_bytes},
+            timeout=1000
+        )
+    return np.array(response.json()["result"])
+
+
+def _encode(image: np.ndarray, encoder: str = ".tif"):
+    if image.dtype == np.uint32:
+        image = image.astype(np.float32)
+    return base64.b64encode(cv2.imencode(encoder, image)[1].tobytes()).decode("utf-8")
+
+
+def spot_tracker(
+        host,
+        port,
+        image,
+        timeout,
+        inference_host: str | None = None,
+        inference_port: str | None = None,
+        model_name: str = "spot_segmentation",
+        distance_threshold: float = 0.05
+    ):
+    """
+    Tracks spots in an image using the spot tracking plugin.
+
+    Args:
+        host (str): The host of the serving manager.
+        port (int): The port of the serving manager.
+        image (np.ndarray): The image to track spots in.
+        timeout (int): The timeout for the request.
+        inference_host (str | None, optional): The host of the inference server. Defaults to None.
+        inference_port (str | None, optional): The port of the inference server. Defaults to None.
+        model_name (str, optional): The name of the model to use. Defaults to "spot_segmentation".
+        distance_threshold (float, optional): The distance threshold for the spot tracker. Defaults to 0.05.
+    """
+    if inference_host is None:
+        inference_host = host
+    if inference_port is None:
+        inference_port = "8080"
+    tracker_result = requests.post(
+        f"http://{host}:{port}/spot_tracking/spot_tracker_body/",
+        json={
+            "image": _encode(image),
+            "host": inference_host,
+            "port": inference_port,
+            "model_name": model_name,
+            "distance_threshold": distance_threshold
+        },
+        timeout=timeout,
+    ).json()
+    objects = [{} for _ in range(len(tracker_result[list(tracker_result.keys())[0]]))]
+    for k, v in tracker_result.items():
+        for idx, value in enumerate(v):
+            objects[idx][k] = value
+    return objects
+
+
+if __name__ == "__main__":
+    import random
+    from time import time
+    from matplotlib import pyplot as plt
+
+    PATH = "/home/branislavhesko/data/TEL/"
+    images = glob.glob(os.path.join(
+        PATH,
+        "*.tif"
+    ))
+    start = time()
+    end = time()
+    print(f"Ellapsed time: {end - start}")
+    area = []
+    start = time()
+    for image in images[50000:50150]:
+        objects = spot_tracker(
+            "172.19.1.16",
+            5000,
+            cv2.imread(image, cv2.IMREAD_UNCHANGED),
+            timeout=5,
+            inference_host="172.19.1.16",
+            inference_port="8080",
+            model_name="spot_segmentation"
+        )
+        img = cv2.imread(image, cv2.IMREAD_UNCHANGED)
+        area.append(objects[0]["AREA"])
+        print(objects[0]["AREA"])
+    end = time()
+    plt.style.use("ggplot")
+    plt.plot(area, "xr")
+    plt.title("Central spot area")
+    plt.xlabel("Image index")
+    plt.ylabel("Area")
+    plt.show()

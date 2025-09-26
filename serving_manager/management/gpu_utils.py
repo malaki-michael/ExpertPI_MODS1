@@ -1,0 +1,123 @@
+import logging
+
+from serving_manager.utils.decorators import exception_handler
+from serving_manager.management.torchserve_base_manager import TorchserveBaseManager
+from serving_manager.management.torchserve_grpc_manager import TorchserveGrpcManager
+from serving_manager.management.torchserve_rest_manager import TorchserveRestManager
+
+
+@exception_handler(Exception, raise_exception=False)
+def clean_gpu_memory(host: str, inference_port: str, management_port: str | None = None,
+                     list_of_model_names_to_keep: list[str] | None = None, use_grpc: bool = True):
+    """Clean up the GPU memory by scaling down the models that are not in the list of model names to keep.
+
+    Args:
+        host (str): The host of the torchserve server.
+        inference_port (str): The inference port of the torchserve server.
+        management_port (str | None, optional): The management port of the torchserve server. Defaults to None.
+        list_of_model_names_to_keep (list[str] | None, optional): The list of model names to keep. Defaults to None.
+        use_grpc (bool, optional): Whether to use the grpc manager. if False, use the rest manager. Defaults to True.
+    """
+    logger = logging.getLogger(__name__)
+    if use_grpc:
+        manager_class = TorchserveGrpcManager
+    else:
+        manager_class = TorchserveRestManager
+    logger.info(f"Using {manager_class.__name__} to manage the server")
+    manager: TorchserveBaseManager = manager_class(
+        host=host,
+        inference_port=inference_port,
+        management_port=management_port
+    )
+    models = manager.list_all_models()
+    logger.info(f"Models found: {models}")
+    for model in models:
+        if list_of_model_names_to_keep and model not in list_of_model_names_to_keep:
+            manager.scale(model, 0)
+            logger.info(f"Scaled down model: {model}")
+        else:
+            logger.info(f"Keeping model: {model}")
+    logger.info("Done cleaning up models")
+
+
+@exception_handler(Exception, raise_exception=False)
+def scale_selected_models(host: str, inference_port: str, management_port: str | None = None,
+                          list_of_models_to_scale: list[str] | None = None, use_grpc: bool = True):
+    """Scale up the models that are in the list of model names to keep.
+
+    Args:
+        host (str): The host of the torchserve server.
+        inference_port (str): The inference port of the torchserve server.
+        management_port (str | None, optional): The management port of the torchserve server. Defaults to None.
+        list_of_models_to_scale (list[str] | None, optional): The list of model names to scale. Defaults to None.
+        use_grpc (bool, optional): Whether to use the grpc manager. if False, use the rest manager. Defaults to True.
+    """
+    logger = logging.getLogger(__name__)
+    if use_grpc:
+        manager_class = TorchserveGrpcManager
+    else:
+        manager_class = TorchserveRestManager
+    logger.info(f"Using {manager_class.__name__} to manage the server")
+    manager: TorchserveBaseManager = manager_class(
+        host=host,
+        inference_port=inference_port,
+        management_port=management_port
+    )
+    models = manager.list_all_models()
+    logger.info(f"Models found: {models}")
+    for model in list_of_models_to_scale:
+        if model in models:
+            manager.scale(model, 1)
+            logger.info(f"Scaled up model: {model}")
+        else:
+            logger.info(f"Model not found: {model}")
+    logger.info("Done scaling up models")
+
+
+@exception_handler(Exception, raise_exception=False)
+def scale_all_models(host: str, inference_port: str, management_port: str | None = None,
+                     use_grpc: bool = True, num_workers: int = 0):
+    """Scale all models to the specified number of workers.
+
+    Args:
+        host (str): The host of the torchserve server.
+        inference_port (str): The inference port of the torchserve server.
+        management_port (str | None, optional): The management port of the torchserve server. Defaults to None.
+        use_grpc (bool, optional): Whether to use the grpc manager. if False, use the rest manager. Defaults to True.
+        num_workers (int, optional): The number of workers to scale all models to. Defaults to 0.
+    """
+    logger = logging.getLogger(__name__)
+    if num_workers > 1:
+        logger.warning(f"Scaling all models to {num_workers} workers. "
+                       "This is not recommended for production use. "
+                       "GPU memory may not be sufficient for all models to run at the same time.")
+    if use_grpc:
+        manager_class = TorchserveGrpcManager
+    else:
+        manager_class = TorchserveRestManager
+    logger.info(f"Using {manager_class.__name__} to manage the server")
+    manager: TorchserveBaseManager = manager_class(
+        host=host,
+        inference_port=inference_port,
+        management_port=management_port
+    )
+    for m in manager.list_all_models():
+        manager.scale(m, num_workers)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    clean_gpu_memory(
+        host="172.19.1.16",
+        inference_port="7443",
+        management_port="7444",
+        list_of_model_names_to_keep=["random", "TEMRegistration", "spot_segmentation", "RonchigramCenter", "LamellaLocation"],
+        use_grpc=True
+    )
+    # scale_all_models(
+    #     host="172.19.1.16",
+    #     inference_port="7443",
+    #     management_port=None,
+    #     use_grpc=True,
+    #     num_workers=0
+    # )
