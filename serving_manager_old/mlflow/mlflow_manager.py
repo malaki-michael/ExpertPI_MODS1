@@ -1,0 +1,150 @@
+import dataclasses
+import logging
+import glob
+import os
+from typing import List
+
+import mlflow
+from mlflow.pytorch import log_model
+from mlflow.entities.model_registry.registered_model import RegisteredModel, ModelVersion
+
+from serving_manager.utils.dummy_model import DummyModel
+
+
+@dataclasses.dataclass()
+class MlflowDEFAULTS:
+    MLFLOW_TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI", "http://172.19.1.16:5000")
+    MLFLOW_S3_ENDPOINT_URL = os.environ.get("MLFLOW_S3_ENDPOINT_URL", "http://172.19.1.16:9000")
+
+
+class MLFlowManager:
+
+    def __init__(self, tracking_uri: str | None = None, s3_endpoint: str | None = None) -> None:
+        """MLFlow manager. This class is able to create experiments, log models, get model versions and download models.
+
+        Args:
+            tracking_uri (str | None, optional): Mlflow tracking uri. Defaults to None.
+            s3_endpoint (str | None, optional): Mlflow s3 enpoint, where s3 minio runs. Defaults to None.
+        """
+        self.tracking_uri = tracking_uri or MlflowDEFAULTS.MLFLOW_TRACKING_URI
+        self.s3_endpoint = s3_endpoint or MlflowDEFAULTS.MLFLOW_S3_ENDPOINT_URL
+        self.logger = logging.getLogger(__name__)
+        self.setup_mlflow()
+        self.client = mlflow.tracking.MlflowClient()
+
+    def setup_mlflow(self):
+        """Setup mlflow tracking uri and s3 endpoint, mlflow is global variable, so it is not necessary to pass it to after
+        """
+        mlflow.set_tracking_uri(self.tracking_uri)
+        os.environ["MLFLOW_S3_ENDPOINT_URL"] = self.s3_endpoint
+
+    def create_experiment(self, experiment_name: str) -> str:
+        """Create mlflow experiment.
+
+        Args:
+            experiment_name (str): Experiment name
+
+        Returns:
+            str: Experiment id
+        """
+        return mlflow.create_experiment(experiment_name)
+
+    def log_model(self, model_name: str, description: str = "", model_info: str = "", model_path: str | None = None):
+        """Log model to mlflow. Model is saved in mlflow s3 bucket. Dummy model is used to save .mar file into serving folder.
+
+        Args:
+            model_name (str): Model name
+            description (str, optional): Model description string. This will be visible in the UI. Defaults to "".
+            model_info (str, optional): Model info to be added. This is common for all models under this name. Defaults to "".
+            model_path (str | None, optional): Path to .mar file. Defaults to None.
+        """
+        log_model(DummyModel(), "model", registered_model_name=model_name)
+        if not model_path:
+            model_path = model_name + ".mar", "serving"
+        mlflow.log_artifact(model_path, "serving")
+        self.client.update_registered_model(model_name, description=description)
+        current_model = self.client.get_latest_versions(model_name)[-1]
+        self.client.update_model_version(current_model.name, current_model.version,
+                                    description="Serving model is stored in artifact serving.\n\n{}".format(model_info))
+        self.logger.info("Model {} registered".format(model_name))
+
+    def get_latest_model_version(self, model_name: str):
+        """Get latest model version for a given model name
+
+        Args:
+            model_name (str): Model name
+
+        Returns:
+            mlflow.ModelInfo: Model info.
+        """
+        current_model = self.client.get_latest_versions(model_name)[-1]
+        return current_model.version
+
+    def get_all_models(self) -> List[RegisteredModel]:
+        """Get all models
+
+        Returns:
+            List[RegisteredModel]: List of models
+        """
+        return self.client.list_registered_models()
+
+    def get_model_version_all(self, model_name: str) -> List[ModelVersion]:
+        """Get all model versions for a given model name
+
+        Args:
+            model_name (str): Model name
+
+        Returns:
+            List[ModelVersion]: List of model versions
+        """
+        return self.client.search_model_versions("name='{}'".format(model_name))
+
+    def delete_model_version(self, model_name: str, model_version: str):
+        """Delete model for a given model name and version
+
+        Args:
+            model_name (str): Model name
+            model_version (str): Model version
+
+        """
+        self.client.delete_model_version(model_name, model_version)
+
+    def download_model(self, model_name: str, model_version: str, model_path: str) -> str:
+        """Download model for a given model name and version
+
+        Args:
+            model_name (str): Model name
+            model_version (str): Model version
+            model_path (str): Path to save model
+
+        Returns:
+            str: Path to saved model
+        """
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+        path = self.client.download_artifacts(self.get_model_version(model_name, model_version).run_id, "serving", model_path)
+        return os.path.join(path, f"{model_name}.mar")
+
+    def get_model_version(self, model_name: str, model_version: str) -> ModelVersion:
+        """Get model for a given model name and version
+
+        Args:
+            model_name (str): Model name
+            model_version (str): Model version
+
+        Returns:
+            ModelVersion: Model info
+        """
+        return self.client.get_model_version(model_name, model_version)
+
+    # TODO: check return type
+    def list_model_versions(self, model_name: str) -> List[ModelVersion]:
+        """List all model versions for a given model name
+
+        Args:
+            model_name (str): Model name
+
+        Returns:
+            List[ModelVersion]: List of model versions
+        """
+        return self.client.search_model_versions("name='{}'".format(model_name))
