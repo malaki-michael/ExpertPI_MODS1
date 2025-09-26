@@ -1,0 +1,2 @@
+from expert_pi.extensions.diffraction_tomography.controller import MainController
+from expert_pi.extensions.diffraction_tomography.view import MainView

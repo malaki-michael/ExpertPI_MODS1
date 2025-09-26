@@ -1,0 +1,668 @@
+/* GENERATED FROM generate_proto.py */
+syntax = "proto3";
+
+option csharp_namespace = "PyStemApi";
+
+package pystem.api.grpc;
+
+
+service Gun {
+    rpc GetHighVoltage (EmptyMessage) returns (FloatMessage);
+    rpc GetEmissionCurrent (EmptyMessage) returns (FloatMessage);
+    rpc GetExtractorVoltage (EmptyMessage) returns (FloatMessage);
+    /* not implemented yet */
+    rpc SetExtractorVoltage (FloatMessage) returns (FloatMessage);
+    rpc GetEnergyWidth (EmptyMessage) returns (FloatMessage);
+    /* get brightness at actual energy units: m**(-2)*rad**(-2) */
+    rpc GetBrightness (EmptyMessage) returns (FloatMessage);
+}
+
+service Illumination {
+    /* best theoretical achievable diameter of STEM spot size in which is 50% of beam intensity */
+    rpc GetSpotSize (EmptyMessage) returns (GetSpotSizeMessage);
+    /* not implemented yet */
+    rpc GetMaximizedCurrent (EmptyMessage) returns (GetMaximizedCurrentMessage);
+    /* converge illumination - half angle on sample
+    parallel mode - theoretical incidence angle */
+    rpc GetConvergenceHalfAngle (EmptyMessage) returns (FloatMessage);
+    /* converge illumination - theoretical d50
+    parallel mode - diameter of the parallel disc */
+    rpc GetBeamDiameter (EmptyMessage) returns (FloatMessage);
+    /* current on sample */
+    rpc GetCurrent (EmptyMessage) returns (FloatMessage);
+    rpc GetIlluminationMode (EmptyMessage) returns (GetIlluminationModeMessage);
+    /* set stem illumination optics, use keep_adjustments option if you want preserve previously set adjustments on top of the preset */
+    rpc SetIlluminationValues (SetIlluminationValuesMessage) returns (GetMaximizedCurrentMessage);
+    /* set parallel beam n sample,
+    use keep_adjustments option if you want preserve previously set adjustments on top of the preset */
+    rpc SetParallelIlluminationValues (SetParallelIlluminationValuesMessage) returns (SetParallelIlluminationValuesRequest);
+    rpc GetCondenserDefocus (GetCondenserDefocusMessage) returns (FloatMessage);
+    /* C3 defocus will not keep the fixed illumination angle
+    FixedAngle defocus uses C2 and C3 combination, thus it might have worse stabilization time.
+    Setting on of the type will reset the previous type to zero */
+    rpc SetCondenserDefocus (SetCondenserDefocusMessage) returns (FloatMessage);
+    rpc GetCondenserDefocusRange (GetCondenserDefocusMessage) returns (FloatRangeMessage);
+    rpc GetObjectiveDefocus (EmptyMessage) returns (FloatMessage);
+    /* objective defocus will slightly modify the stigmation */
+    rpc SetObjectiveDefocus (FloatMessage) returns (FloatMessage);
+    rpc GetObjectiveDefocusRange (EmptyMessage) returns (FloatRangeMessage);
+    /* get normal and skew axis  of stigmators in amperes */
+    rpc GetStigmator (EmptyMessage) returns (PositionMessage);
+    /* set normal and skew axis  of stigmators in amperes */
+    rpc SetStigmator (PositionMessage) returns (PositionMessage);
+    rpc GetStigmatorRange (EmptyMessage) returns (GetStigmatorRangeMessage);
+    rpc GetTilt (GetTiltMessage) returns (PositionMessage);
+    /* use primary the precession type of the tilt - it is calibrated with respect to the precession */
+    rpc SetTilt (SetTiltMessage) returns (PositionMessage);
+    rpc GetTiltRange (GetTiltMessage) returns (GetStigmatorRangeMessage);
+    rpc GetShift (GetTiltMessage) returns (PositionMessage);
+    /* use primary the scanning type of the shift,
+    higher range can be achieved by precession dynamic type, but it cannot be combined together with precession */
+    rpc SetShift (SetTiltMessage) returns (PositionMessage);
+    rpc GetShiftRange (GetTiltMessage) returns (GetStigmatorRangeMessage);
+    rpc GetApertureSize (EmptyMessage) returns (FloatMessage);
+    rpc GetAperturePosition (EmptyMessage) returns (PositionMessage);
+    /* this is the electronic shift by the double deflector before and after the aperture */
+    rpc SetAperturePosition (PositionMessage) returns (PositionMessage);
+    rpc GetAperturePositionRange (EmptyMessage) returns (GetStigmatorRangeMessage);
+}
+
+service Microscope {
+    rpc GetState (EmptyMessage) returns (GetStateMessage);
+    /* only Standby or Ready states can be set
+    going to Standby state will close the valves of the column and stop the stage feedback loop.
+    in Ready state there is a limit of 30 minutes after which the microscope will be automatically turned to Standby state again. Any new acquisition will reset this limit
+    If the microscope is in Acquiring state, you need to stop the acquisition first */
+    rpc SetState (GetStateMessage) returns (GetStateMessage);
+    rpc GetOpticalMode (EmptyMessage) returns (GetOpticalModeMessage);
+    /* Low magnification mode is done by moving the stage closer to the polepiece (about 1.3mm), it is meant just for the general navigation. Diffraction pattern and tilting will be very limited */
+    rpc SetOpticalMode (GetOpticalModeMessage) returns (GetOpticalModeMessage);
+    rpc GetEnergy (EmptyMessage) returns (FloatMessage);
+    /* use with care */
+    rpc SetEnergy (FloatMessage) returns (FloatMessage);
+    rpc GetEnergyRange (EmptyMessage) returns (GetEnergyRangeMessage);
+}
+
+service Projection {
+    rpc GetTilt (GetTiltMessage) returns (PositionMessage);
+    rpc SetTilt (SetTiltMessage) returns (PositionMessage);
+    rpc GetTiltRange (GetTiltMessage) returns (GetStigmatorRangeMessage);
+    rpc GetShift (GetTiltMessage) returns (PositionMessage);
+    rpc SetShift (SetTiltMessage) returns (PositionMessage);
+    rpc GetShiftRange (GetTiltMessage) returns (GetStigmatorRangeMessage);
+    /* in pixels */
+    rpc GetCameraShift (EmptyMessage) returns (PositionMessage);
+    /* camera shift coils are located after the projection lenses, thus they will be very precised to place the beam to required place on camera,
+    this value is used also in off_axis detector to selection of the chosen signal */
+    rpc SetCameraShift (PositionMessage) returns (PositionMessage);
+    rpc GetCameraShiftRange (EmptyMessage) returns (GetStigmatorRangeMessage);
+    rpc GetIsOffAxisStemEnabled (EmptyMessage) returns (BoolMessage);
+    /* when BF detector is retracted it can be used for quick overview images,
+    the switch from camera to the detector is in order of hundreds of ms, done just by deflectors,
+    acquisition will be stopped, camera shift reseted */
+    rpc SetIsOffAxisStemEnabled (BoolMessage) returns (BoolMessage);
+    /* returns detector half angle ranges based on the optics tracing, this method is slow around 200ms */
+    rpc GetMaxDetectorAngles (EmptyMessage) returns (GetMaxDetectorAnglesMessage);
+    rpc GetMaxCameraAngle (EmptyMessage) returns (FloatMessage);
+    /* calibrated half angle on camera */
+    rpc SetMaxCameraAngle (SetMaxCameraAngleMessage) returns (FloatMessage);
+    rpc GetMaxCameraAngleRange (EmptyMessage) returns (FloatRangeMessage);
+    rpc GetCameraToStageRotation (EmptyMessage) returns (FloatMessage);
+    /* in At of P1 */
+    rpc GetProjectorDefocus (EmptyMessage) returns (FloatMessage);
+    /* in At of P1 */
+    rpc SetProjectorDefocus (FloatMessage) returns (FloatMessage);
+    rpc GetProjectorDefocusRange (EmptyMessage) returns (FloatRangeMessage);
+}
+
+service Scanning {
+    rpc GetFieldWidth (EmptyMessage) returns (FloatMessage);
+    rpc SetFieldWidth (FloatMessage) returns (FloatMessage);
+    /* There is a overhead which is used for compensation of the dynamical effect, for slower acquisition the available fov is larger than for faster acquisitions.
+    If the scan hexade is set (not auto -1), it will be used in the calculation, otherwise maximum range is used. */
+    rpc GetFieldWidthRange (GetFieldWidthRangeMessage) returns (FloatRangeMessage);
+    /* Returns a list of maximal table-fov (m) of precession scans for each hexade (index=hexade).
+    These values determine scan-hexade by set fov during precessioon-scans if the scan-hexade is not forced by SetZoomRangeIndex. */
+    rpc GetFovRangesPrecessionScan (EmptyMessage) returns (GetEnergyRangeMessage);
+    /* Hexades 0-5, -1 means automatic changing (and 'unfreezing').
+    For the Scanning system it also 'freezes' the hexade. For the Precession system it can still be overwritten in pystem, if the max amplifier currents aren't be enough. */
+    rpc SetZoomRangeIndex (SetZoomRangeIndexMessage) returns (SetZoomRangeIndexRequest);
+    rpc GetZoomRangeIndex (GetZoomRangeIndexMessage) returns (SetZoomRangeIndexRequest);
+    /* Returns the last actually set hexades on the specified scanning system in the order [O1DS, O1Dl, O2Dl, O2DS] - for debugging and testing. */
+    rpc GetAppliedZoomRangeIndices (GetZoomRangeIndexMessage) returns (GetAppliedZoomRangeIndicesMessage);
+    rpc GetRotation (EmptyMessage) returns (FloatMessage);
+    rpc GetShear (EmptyMessage) returns (FloatMessage);
+    rpc SetShear (FloatMessage) returns (FloatMessage);
+    rpc GetAspectY (EmptyMessage) returns (FloatMessage);
+    rpc SetAspectY (FloatMessage) returns (FloatMessage);
+    rpc SetRotation (FloatMessage) returns (FloatMessage);
+    rpc GetMaximumScanFieldNumberOfPixels (EmptyMessage) returns (UIntMessage);
+    rpc GetPrecessionFrequency (EmptyMessage) returns (FloatMessage);
+    rpc SetPrecessionFrequency (FloatMessage) returns (EmptyMessage);
+    rpc GetAlignedPrecessionFrequencies (EmptyMessage) returns (GetEnergyRangeMessage);
+    rpc GetPrecessionAngle (EmptyMessage) returns (FloatMessage);
+    rpc SetPrecessionAngle (SetPrecessionAngleMessage) returns (FloatMessage);
+    /* Uses the set precession frequency with the corresponding precession matrices. */
+    rpc GetPrecessionAngleRange (EmptyMessage) returns (FloatRangeMessage);
+    /* depreceated use precession_height_correction */
+    rpc GetPrecessionHeight (EmptyMessage) returns (PositionMessage);
+    /* depreceated use precession_height_correction */
+    rpc SetPrecessionHeight (PositionMessage) returns (PositionMessage);
+    /* depreceated use precession_height_correction */
+    rpc GetPrecessionHeightRange (EmptyMessage) returns (GetStigmatorRangeMessage);
+    /* 2x2 flattened matrix in meters */
+    rpc GetPrecessionHeightCorrection (EmptyMessage) returns (GetEnergyRangeMessage);
+    /* use this values for tunning the precession on the sample 2x2 flattened matrix in meters */
+    rpc SetPrecessionHeightCorrection (SetPrecessionHeightCorrectionMessage) returns (GetEnergyRangeMessage);
+    /* depreciated use deprecession_tilt_correction instead */
+    rpc GetDeprecessionHeight (EmptyMessage) returns (PositionMessage);
+    /* depreciated use deprecession_tilt_correction instead */
+    rpc SetDeprecessionHeight (PositionMessage) returns (PositionMessage);
+    /* depreciated use deprecession_tilt_correction instead */
+    rpc GetDeprecessionHeightRange (EmptyMessage) returns (GetStigmatorRangeMessage);
+    /* 2x2 flattened matrix in rads */
+    rpc GetDeprecessionTiltCorrection (EmptyMessage) returns (GetEnergyRangeMessage);
+    /* 2x2 flattened matrix for tuning diffractions spot while precessing
+    in radians! */
+    rpc SetDeprecessionTiltCorrection (SetPrecessionHeightCorrectionMessage) returns (GetEnergyRangeMessage);
+    /* camera_exposure: for low dose application you can set the camera exposure to its limit approx 1/4000,
+    but still limit the dose by setting lower pixel_time. If left default zero the pixel_time will be used as camera_exposure */
+    rpc StartRectangleScan (StartRectangleScanMessage) returns (StartRectangleScanRequest);
+    /* tilt_factors are factors of the precession angle (-1 to 1), number of frames will be multipled by the lenght of this list */
+    rpc StartTiltSeries (StartTiltSeriesMessage) returns (StartRectangleScanRequest);
+    rpc StopScanning (EmptyMessage) returns (EmptyMessage);
+    rpc GetDriftRate (EmptyMessage) returns (PositionMessage);
+    /* any scanning recipe will be adjusted for the drift rate correction, the scale factor will need to be set prior to the scan, otherwise the DSP outputs will overflow */
+    rpc SetDriftRate (PositionMessage) returns (PositionMessage);
+    rpc GetScaleFactor (EmptyMessage) returns (FloatMessage);
+    /* use this factor to leave room for drift, or if you want to speed up the switchinf between off axis detector and camera acuiqsition */
+    rpc SetScaleFactor (FloatMessage) returns (FloatMessage);
+    rpc StartCamera (StartCameraMessage) returns (EmptyMessage);
+    rpc StopCamera (EmptyMessage) returns (EmptyMessage);
+    /* set roi central rectangle (width will be always 512) for faster acquisition */
+    rpc SetCameraRoi (SetCameraRoiMessage) returns (SetCameraRoiMessage);
+    rpc GetCameraRoi (EmptyMessage) returns (SetCameraRoiMessage);
+    rpc GetCameraMaxFps (EmptyMessage) returns (FloatMessage);
+    rpc CameraIsAcquiring (EmptyMessage) returns (BoolMessage);
+    rpc GetDistortionCoefficients (EmptyMessage) returns (GetDistortionCoefficientsMessage);
+    rpc SetDistortionCoefficients (GetDistortionCoefficientsMessage) returns (GetDistortionCoefficientsMessage);
+    rpc SetBlankerMode (SetBlankerModeMessage) returns (SetBlankerModeMessage);
+    rpc GetBlankerMode (EmptyMessage) returns (SetBlankerModeMessage);
+    rpc SetImageCompression (SetImageCompressionMessage) returns (SetImageCompressionMessage);
+    rpc GetImageCompression (EmptyMessage) returns (SetImageCompressionMessage);
+    rpc GetDeadPixels (EmptyMessage) returns (GetDeadPixelsMessage);
+}
+
+service Server {
+    rpc GetVersion (EmptyMessage) returns (GetVersionMessage);
+    rpc GetState (EmptyMessage) returns (GetStateRequest);
+    rpc EnableLiveStreaming (BoolMessage) returns (BoolMessage);
+}
+
+service Stage {
+    rpc GetCalibration (EmptyMessage) returns (GetCalibrationMessage);
+    /* calibration of the holder to the currently loaded sample, x,y,z shifts and alpha,beta ganna intrinsic euler angles */
+    rpc SetCalibration (GetCalibrationMessage) returns (GetCalibrationMessage);
+    rpc GetXY (EmptyMessage) returns (PositionMessage);
+    /* x,y coordinates are with respect to the sample, plane, note that it will not correspond to scanning xy positions at non-zero tilts */
+    rpc SetXY (SetXYMessage) returns (PositionMessage);
+    /* approximated polygon of the allowed ranges, this will be different for each alpha, beta rotations and z position */
+    rpc GetXYRange (EmptyMessage) returns (GetStigmatorRangeMessage);
+    rpc GetZ (EmptyMessage) returns (FloatMessage);
+    /* z coordinates is always in the direction of the beam - even at tilted sample */
+    rpc SetZ (SetZMessage) returns (FloatMessage);
+    rpc GetZRange (EmptyMessage) returns (FloatRangeMessage);
+    rpc GetAlpha (EmptyMessage) returns (FloatMessage);
+    /* tilting alpha with respect to the selected x,y,z position on the sample */
+    rpc SetAlpha (SetAlphaMessage) returns (FloatMessage);
+    rpc GetAlphaRange (EmptyMessage) returns (FloatRangeMessage);
+    /* check if the current holder supports beta rotation */
+    rpc IsBetaEnabled (EmptyMessage) returns (BoolMessage);
+    rpc GetBeta (EmptyMessage) returns (FloatMessage);
+    /* tilting beta with respect to the selected x,y,z position on the sample */
+    rpc SetBeta (SetBetaMessage) returns (FloatMessage);
+    rpc GetBetaRange (EmptyMessage) returns (FloatRangeMessage);
+    rpc RecalculateRanges (RecalculateRangesMessage) returns (FloatMessage);
+    /* this is residual gamma rotation due to stage mechanics, the scan rotation is actually applied on top of this rotation */
+    rpc GetGamma (EmptyMessage) returns (FloatMessage);
+    rpc GetTilt (EmptyMessage) returns (StageTiltMessage);
+    /* set alpha,beta simultaneously */
+    rpc SetTilt (SetTiltRequest) returns (StageTiltMessage);
+    /* approximated polygon of the allowed ranges, this will be different for each xyz position */
+    rpc GetTiltRange (EmptyMessage) returns (GetTiltRangeMessage);
+    rpc GetHolderInfo (EmptyMessage) returns (GetHolderInfoMessage);
+    rpc Stop (EmptyMessage) returns (EmptyMessage);
+    /* (3x3) flattened affine transformation \\(P\_{os}\\) - radians and meters,
+    to get the position on the sample plane simply calculate: $${P\_{os}\cdot\left(\begin{matrix}x\\\y\\\1\end{matrix}\right)}$$
+    where \\(x,y\\) are coordinates on the scanned image (assuming the center has coordinates (0,0)) */
+    rpc GetOpticsToSampleProjection (EmptyMessage) returns (GetEnergyRangeMessage);
+    /* fast setting of xyz */
+    rpc SetXYZ (SetXYZMessage) returns (SetXYZMessage);
+    /* fast setting of xyz,alpha beta, if single tilt holder beta is ignored */
+    rpc SetXYZAB (SetXYZABMessage) returns (GetCalibrationMessage);
+}
+
+service StemDetector {
+    rpc GetIsInserted (GetIsInsertedMessage) returns (BoolMessage);
+    /* will produce vibrations of the column due to moving detector for several seconds */
+    rpc SetIsInserted (SetIsInsertedMessage) returns (BoolMessage);
+    /* Sets the gain of the specified detector, in dimensionless units.  The signal intensity read out from the detector
+    will be given by Intensity = Gain * SignalCurrent / BeamCurrent / Scale * MAXIMUM_INTENSITY
+    where MAXIMUM_INTENSITY depends on the number of bits read out (255 for 8 bits and 65535 for 16 bits) */
+    rpc GetGain (GetIsInsertedMessage) returns (FloatMessage);
+    rpc SetGain (SetGainMessage) returns (FloatMessage);
+    rpc GetGainRange (GetIsInsertedMessage) returns (FloatRangeMessage);
+    rpc GetOffset (GetIsInsertedMessage) returns (FloatMessage);
+    rpc SetOffset (SetGainMessage) returns (FloatMessage);
+    rpc GetOffsetRange (GetIsInsertedMessage) returns (FloatRangeMessage);
+    rpc GetScale (GetIsInsertedMessage) returns (FloatMessage);
+    /* set the scale to the portion of the beam current on the stem detector */
+    rpc SetScale (SetGainMessage) returns (FloatMessage);
+    rpc GetScaleRange (GetIsInsertedMessage) returns (FloatRangeMessage);
+}
+
+service Xray {
+    /* the minimal time of the event - this is used for the dead time correction */
+    rpc GetXraySecondsPerEvent (EmptyMessage) returns (FloatMessage);
+    rpc GetXrayFilterType (EmptyMessage) returns (GetXrayFilterTypeMessage);
+    rpc SetXrayFilterType (GetXrayFilterTypeMessage) returns (GetXrayFilterTypeMessage);
+}
+
+/* Messages */
+
+message EmptyMessage {
+}
+
+message FloatMessage {
+    double value = 1;
+}
+
+message UIntMessage {
+    uint32 value = 1;
+}
+
+message BoolMessage {
+    bool value = 1;
+}
+
+message PositionMessage {
+    double x = 1;
+    double y = 2;
+}
+
+message FloatRangeMessage {
+    double start = 1;
+    double end = 2;
+}
+
+message StageTiltMessage {
+    double alpha = 1;
+    double beta = 2;
+}
+
+message GetSpotSizeMessage {
+    double current = 1;
+    double angle = 2;
+    double d50 = 3;
+}
+
+message GetMaximizedCurrentMessage {
+    double current = 1;
+    double angle = 2;
+}
+
+message GetIlluminationModeMessage {
+    IlluminationMode value = 1;
+}
+
+message SetIlluminationValuesMessage {
+    double current = 1;
+    double angle = 2;
+    bool keepAdjustments = 3;
+}
+
+message SetParallelIlluminationValuesMessage {
+    double current = 1;
+    double radius = 2;
+    bool keepAdjustments = 3;
+}
+
+message SetParallelIlluminationValuesRequest {
+    double current = 1;
+    double radius = 2;
+}
+
+message GetCondenserDefocusMessage {
+    CondenserFocusType type = 1;
+}
+
+message SetCondenserDefocusMessage {
+    double value = 1;
+    CondenserFocusType type = 2;
+}
+
+message GetStigmatorRangeMessage {
+    repeated PositionMessage value = 1;
+}
+
+message GetTiltMessage {
+    DeflectorType type = 1;
+}
+
+message SetTiltMessage {
+    PositionMessage position = 1;
+    DeflectorType type = 2;
+}
+
+message GetStateMessage {
+    MicroscopeState value = 1;
+}
+
+message GetOpticalModeMessage {
+    OpticalMode value = 1;
+}
+
+message GetEnergyRangeMessage {
+    repeated double value = 1;
+}
+
+message GetMaxDetectorAnglesMessage {
+    FloatRangeMessage haadf = 1;
+    FloatRangeMessage bf = 2;
+    FloatRangeMessage camera = 3;
+}
+
+message SetMaxCameraAngleMessage {
+    DetectorType detector = 1;
+    double value = 2;
+    bool keepAdjustments = 3;
+}
+
+message GetFieldWidthRangeMessage {
+    double pixelTime = 1;
+    uint32 scanFieldNumberOfPixels = 2;
+}
+
+message SetZoomRangeIndexMessage {
+    int64 value = 1;
+    ScanSystemType typeScan = 2;
+}
+
+message SetZoomRangeIndexRequest {
+    int64 value = 1;
+}
+
+message GetZoomRangeIndexMessage {
+    ScanSystemType typeScan = 1;
+}
+
+message GetAppliedZoomRangeIndicesMessage {
+    repeated uint32 value = 1;
+}
+
+message SetPrecessionAngleMessage {
+    double value = 1;
+    bool skipDeprecession = 2;
+}
+
+message SetPrecessionHeightCorrectionMessage {
+    repeated double matrix = 1;
+}
+
+message StartRectangleScanMessage {
+    uint32 numberOfFrames = 1;
+    uint32 width = 2;
+    uint32 height = 3;
+    uint32 left = 4;
+    uint32 top = 5;
+    double pixelTime = 6;
+    uint32 scanFieldNumberOfPixels = 7;
+    repeated DetectorType enabledDetectors = 8;
+    bool isPrecessionEnabled = 9;
+    bool isCrossEliminationEnabled = 10;
+    double cameraExposure = 11;
+    bool isBeamBlanked = 12;
+}
+
+message StartRectangleScanRequest {
+    string scanId = 1;
+}
+
+message StartTiltSeriesMessage {
+    uint32 numberOfFrames = 1;
+    uint32 width = 2;
+    uint32 height = 3;
+    uint32 left = 4;
+    uint32 top = 5;
+    double pixelTime = 6;
+    uint32 scanFieldNumberOfPixels = 7;
+    repeated DetectorType enabledDetectors = 8;
+    repeated PositionMessage tiltFactors = 9;
+    double cameraExposure = 10;
+    bool isBeamBlanked = 11;
+}
+
+message StartCameraMessage {
+    double exposure = 1;
+    double fps = 2;
+    uint32 frameCount = 3;
+}
+
+message SetCameraRoiMessage {
+    RoiMode roiMode = 1;
+    bool use16bit = 2;
+}
+
+message GetDistortionCoefficientsDictCollectionMessage {
+    int64 n = 1;
+    int64 k = 2;
+    double real = 3;
+    double imag = 4;
+}
+
+message GetDistortionCoefficientsDictMessage {
+    double origRot = 1;
+    repeated GetDistortionCoefficientsDictCollectionMessage coeffs = 2;
+}
+
+message GetDistortionCoefficientsMessage {
+    GetDistortionCoefficientsDictMessage scan = 1;
+    GetDistortionCoefficientsDictMessage descan = 2;
+    GetDistortionCoefficientsDictMessage precession = 3;
+    GetDistortionCoefficientsDictMessage deprecession = 4;
+}
+
+message SetBlankerModeMessage {
+    BeamBlankType value = 1;
+}
+
+message SetImageCompressionMessage {
+    Compression value = 1;
+}
+
+message GetDeadPixelsCollectionMessage {
+    int64 x = 1;
+    int64 y = 2;
+}
+
+message GetDeadPixelsMessage {
+    repeated GetDeadPixelsCollectionMessage value = 1;
+}
+
+message GetVersionMessage {
+    string value = 1;
+}
+
+message GetStateRequest {
+    string version = 1;
+    double uptime = 2;
+    double cpuLoad = 3;
+    double memoryPercent = 4;
+    double memoryConsumed = 5;
+    double memoryTotal = 6;
+}
+
+message GetCalibrationMessage {
+    double x = 1;
+    double y = 2;
+    double z = 3;
+    double alpha = 4;
+    double beta = 5;
+    double gamma = 6;
+}
+
+message SetXYMessage {
+    double x = 1;
+    double y = 2;
+    bool nowait = 3;
+    bool fixedAlpha = 4;
+    bool fixedBeta = 5;
+}
+
+message SetZMessage {
+    double value = 1;
+    bool nowait = 2;
+    bool fixedAlpha = 3;
+    bool fixedBeta = 4;
+}
+
+message SetAlphaMessage {
+    double value = 1;
+    bool nowait = 2;
+    bool fixedBeta = 3;
+}
+
+message SetBetaMessage {
+    double value = 1;
+    bool nowait = 2;
+    bool fixedAlpha = 3;
+}
+
+message RecalculateRangesMessage {
+    double maxTime = 1;
+}
+
+message SetTiltRequest {
+    double alpha = 1;
+    double beta = 2;
+    bool nowait = 3;
+}
+
+message GetTiltRangeMessage {
+    repeated StageTiltMessage value = 1;
+}
+
+message GetHolderInfoMessage {
+    uint64 loaded = 1;
+    string holderName = 2;
+    HolderType holderType = 3;
+}
+
+message SetXYZMessage {
+    double x = 1;
+    double y = 2;
+    double z = 3;
+}
+
+message SetXYZABMessage {
+    double x = 1;
+    double y = 2;
+    double z = 3;
+    double alpha = 4;
+    double beta = 5;
+}
+
+message GetIsInsertedMessage {
+    DetectorType detector = 1;
+}
+
+message SetIsInsertedMessage {
+    DetectorType detector = 1;
+    bool value = 2;
+}
+
+message SetGainMessage {
+    DetectorType detector = 1;
+    double value = 2;
+}
+
+message GetXrayFilterTypeMessage {
+    XrayFilterType value = 1;
+}
+
+/* Enums */
+
+enum IlluminationMode {
+    Convergent  = 0;
+    Parallel  = 1;
+}
+
+enum CondenserFocusType {
+    C3  = 0;
+    FixedAngle  = 1;
+}
+
+enum DeflectorType {
+    Scan  = 0;
+    Precession  = 1;
+    PrecessionDynamic  = 2;
+}
+
+enum MicroscopeState {
+    Standby  = 0;
+    Ready  = 1;
+    Undefined  = 2;
+    Error  = 3;
+    Acquiring  = 4;
+    SampleLoading  = 5;
+}
+
+enum OpticalMode {
+    Off  = 0;
+    ConvergentBeam  = 1;
+    LowMagnification  = 2;
+    ParallelBeam  = 3;
+}
+
+enum DetectorType {
+    BF  = 0;
+    HAADF  = 1;
+    Camera  = 2;
+    EDX0  = 3;
+    EDX1  = 4;
+}
+
+enum ScanSystemType {
+    SCAN  = 0;
+    PRECESSION  = 1;
+}
+
+enum RoiMode {
+    Disabled  = 0;
+    Lines_256  = 1;
+    Lines_128  = 2;
+}
+
+enum BeamBlankType {
+    BeamOff  = 0;
+    BeamOn  = 1;
+    BeamAcq  = 2;
+}
+
+enum Compression {
+    NoCompression  = 0;
+    Bslz4  = 1;
+}
+
+enum HolderType {
+    Unknown  = 0;
+    SingleTilt  = 1;
+    DoubleTilt  = 2;
+    Needle  = 3;
+}
+
+enum XrayFilterType {
+    CountRate  = 0;
+    EnergyResolution  = 1;
+    Mixed  = 2;
+}

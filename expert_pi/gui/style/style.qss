@@ -1,0 +1,360 @@
+/* colors pallets - TODO- make css use variables
+    backgrounds:
+        #302F2F; - default background
+        #363548; - hover background
+        #272727; - darker background
+        #3f3e3e; - lighter background / border
+
+
+        #6666dd; - selected
+        #8888ff; - selected hover
+
+        #222;    - disabled
+
+        black; - graphs/images background
+
+    text colors:
+        silver  - default #c0c0c0
+        #777;   - darker color
+        yellow  - transitions
+        red     - transitions
+*/
+
+QWidget
+{
+    color: silver;
+    background-color: #302F2F;
+    selection-background-color:#8888ff;
+    selection-color: black;
+    background-clip: border;
+    border-image: none;
+    outline: 0;
+}
+
+ QScrollBar:vertical {
+     border: 0px solid black;
+     background: #272727;
+     margin: 0px 0;
+ }
+ QScrollBar::handle:vertical {
+     background: #3f3e3e;
+
+     margin:0px 1px;
+     min-height: 20px;
+ }
+ QScrollBar::add-line:vertical {
+     border:0px solid black;
+     height: 0px;
+     subcontrol-position: bottom;
+     subcontrol-origin: margin;
+ }
+
+ QScrollBar::sub-line:vertical {
+     border:0px solid black;
+     height: 0px;
+     subcontrol-position: top;
+     subcontrol-origin: margin;
+ }
+
+
+ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+     background: none;
+ }
+
+
+
+
+QGraphicsView
+{
+    border:0px solid black;
+}
+
+QSplitter::handle:horizontal {
+    width: 1px;
+}
+
+QSplitter::handle:vertical {
+    height: 1px;
+}
+
+QLineEdit
+{
+    border: 1px solid #3f3e3e;
+    background-color:#272727;
+    padding:2px;
+}
+
+
+QComboBox
+{
+    border: 1px solid #3f3e3e;
+    background-color:#272727;
+    padding:2px;
+}
+QPushButton{
+    padding:2px;
+}
+
+
+
+
+
+
+
+
+
+QCheckBox {
+    spacing: 5px;
+    color:#777;
+    padding-left:2px;
+}
+
+QCheckBox::indicator {
+    width: 0.8em;
+    height: 0.8em;
+}
+
+QCheckBox::indicator:unchecked {
+    image: url(expert_pi/gui/style/images/elements/unchecked.svg);
+}
+
+
+QCheckBox::indicator:checked{
+    image: url(expert_pi/gui/style/images/elements/checked.svg);
+}
+
+
+
+QAbstractSpinBox {
+    padding:2px;
+    border:0px solid black;
+    border-bottom:1px solid #3f3e3e;
+    color: silver;
+    border-radius: 2px;
+    min-width: 75px;
+    background-color:#272727;
+}
+
+QAbstractSpinBox:disabled{
+    color:#3f3e3e;
+}
+
+QPushButton:disabled{
+    color:#3f3e3e;
+    background-color: #272727;
+}
+
+QComboBox:disabled{
+    color:#3f3e3e;
+}
+
+
+
+QLabel{
+    color:#777;
+    padding-left:2px;
+}
+
+QMessageBox{
+    font-size:1.5em;
+}
+QMessageBox QPushButton{
+    padding:5px 10px;
+}
+
+
+QMessageBox QPushButton::hover{
+    background-color:#363548;
+}
+
+.toolbarButton{
+    border:0px solid black;
+    border-bottom:1px solid #3f3e3e;
+
+}
+.toolbarButton::hover{
+    background-color:#363548;
+}
+
+.toolbarButton[hover="true"]{
+    background-color:#363548;
+}
+
+.toolbarButton[selected="true"]{
+    background-color:#6666dd;
+    border-bottom:1px solid #6666dd;
+}
+
+.toolbarButton[hover_selected="true"]{
+    background-color:#8888ff;
+}
+
+.toolbarButton[selected="true"]::hover{
+    background-color:#8888ff;
+    border-bottom:1px solid #8888ff;
+}
+
+
+.toolbarButton[busy="true"]{
+    color:yellow;
+}
+
+.toolbarButton[error="true"]{
+    background-color:red;
+    color:black;
+}
+
+.big{
+    font-size:14px;
+    font-weight:bold;
+    padding:5px;
+}
+
+
+.iconButton{
+    background-color:rgba(39,39,39,180);
+    padding:10px;
+    margin:0px;
+    border:0px solid none;
+}
+
+
+
+
+.toolbarSelectableComboBox{
+    border:0px solid black;
+    border-bottom:1px solid #3f3e3e;
+    background-color: #302F2F;
+
+    font-size:14px;
+    font-weight:bold;
+    padding:5px;
+}
+.toolbarSelectableComboBox::hover{
+    background-color:#363548;
+}
+
+.toolbarSelectableComboBox[selected="true"]{
+    background-color:#6666dd;
+    border-bottom:1px solid #6666dd;
+}
+
+.toolbarSelectableComboBox[selected="true"]::hover{
+    background-color:#8888ff;
+    border-bottom:1px solid #8888ff;
+}
+
+
+.toolbarSelectableComboBox[busy="true"]{
+    color:yellow;
+}
+
+.toolbarSelectableComboBox[error="true"]::hover{
+    background-color:red;
+    color:black;
+}
+
+
+
+
+
+.toolbarComboBox{
+    border:0px solid black;
+    border-bottom:1px solid #3f3e3e;
+    padding:2px;
+}
+
+.toolbarComboBox[busy="true"]{
+    color:yellow;
+}
+
+.toolbarComboBox[error="true"]{
+    color:red;
+}
+
+.toolParameters{
+    background-color:#6666dd;
+}
+
+
+
+
+
+.toolbarSpinBox[busy="true"]{
+    color:yellow;
+    selection-color: yellow;
+}
+
+.toolbarSpinBox[error="true"]{
+    color:red;
+}
+
+
+.selected{
+    background-color:#6666dd;
+}
+
+.selected::hover{
+    background-color:#aaaaff;
+}
+
+
+
+
+
+
+
+.elementButton{
+    color:black;
+    border:0px solid black;
+    background-color:#3f3e3e;
+    padding:2px;
+}
+.elementButton::hover{
+    color:#222222;
+    font:bold;
+}
+
+
+
+.infoButton{
+    background-color: #3f3e3e;
+    padding:2px 6px;
+}
+.infoButton::hover{
+    background-color:#363548;
+}
+
+.infoButton[selected="true"]{
+    background-color:#6666dd;
+}
+
+.infoButton[selected="true"]::hover{
+    background-color:#8888ff;
+}
+
+
+.infoButton[busy="true"]{
+    color:yellow;
+}
+
+.infoButton[error="true"]{
+    color:red;
+}
+
+
+.navigationLabel{
+    background-color:rgba(39,39,39,180);
+    padding:2px;
+    color:#6666dd;
+}
+
+
+
+
+
+
+
+
+
+
