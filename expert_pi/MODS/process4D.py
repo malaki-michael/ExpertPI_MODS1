@@ -13,7 +13,8 @@ def bin_data(dataset, blocksize, filename):
     Function downsamples the diffraction space of a 4D array and returns the binned dataset
     arguments:
     dataset = 4D numpy array - (x,y, kx, ky)  x,y ==> real space shape, kx. ky ==> diffraction space shape
-    m = integer value by how many times you want to downsample
+    blocksize = integer value by how many times you want to downsmaple(bin)
+    filename = complete path of original file. This is used to saved the binned data.
     """
     binned_data = block_reduce(dataset, block_size = (1,1, blocksize, blocksize), func = np.mean)
     print(f"\n\tThe shape of original data is {dataset.shape}")
@@ -27,8 +28,8 @@ def sliders(area, avgDPB, metadata =None):
     """
     Displays a slider gui to select ADF angular ranges in mrad
     Arguments:
-    area = area of the direct beam in pixels
-    cal_angle = pixels per mrad
+    area = area of the direct beam in pixels, this is calculated by skimage.feature.blob_log() in virtual_images()
+    avgDPB = MXM array (typically 128X128), the average diffraction pattern downsampled.
     metadata = dictionary
     """ 
 
@@ -37,11 +38,11 @@ def sliders(area, avgDPB, metadata =None):
         with open(filename, "r") as file:
             metadata = json.load(file)
     
-    max_angle = metadata["Diffraction angle (mrad)"]
-    cal_angle = avgDPB.shape[0]/max_angle                # calibration angle
+    max_angle = metadata["Diffraction angle (mrad)"]     
+    cal_angle = avgDPB.shape[0]/max_angle                # calibration angle in pixels/mrad
 
     main_window = tk.Tk()
-    var1 = tk.IntVar()
+    var1 = tk.IntVar()                                  # to get the value from the sliders
     var2 = tk.IntVar()
 
     def get_angles():
@@ -71,7 +72,7 @@ def sliders(area, avgDPB, metadata =None):
                         fg = "black")
     in_label.grid(row=0, column=0)
 
-    in_slider = tk.Scale(frame, orient="horizontal", from_= area*cal_angle, to= 5*area*cal_angle, variable= var1)
+    in_slider = tk.Scale(frame, orient="horizontal", from_= 5, to= 20, variable= var1)
     in_slider.grid(row=0, column=1)
 
     out_label = tk.Label(frame, text="Outer Angle",
@@ -79,7 +80,7 @@ def sliders(area, avgDPB, metadata =None):
                         fg = "black")
     out_label.grid(row=1,column=0)
 
-    out_slider = tk.Scale(frame, orient="horizontal", from_=5*area*cal_angle, to=metadata["Diffraction angle (mrad)"],variable = var2)
+    out_slider = tk.Scale(frame, orient="horizontal", from_=20, to=metadata["Diffraction angle (mrad)"],variable = var2)
     out_slider.grid(row=1, column=1)
 
     get_btn = tk.Button(frame, text="Get Angles",
