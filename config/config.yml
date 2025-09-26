@@ -1,0 +1,71 @@
+# connection
+connection:
+  #host: 127.0.0.1
+
+  camera_port: 861
+  stem_port: 862
+  edx_port: 863
+  cache_port: 871
+
+  mqtt_broker_port: 853
+  mqtt_stem_server_name: stem
+
+# --------------------------------------------------------------------------------
+
+# inference
+inference:
+  host: 172.19.1.16
+  inference_port: 8600
+  management_port: 8081
+  plugin_port: 7443
+  deprecession_endpoint: deprecession_mask_body
+  metric_name: best_1_area
+  model_name: diffraction_spot_segmentation
+  num_objects: 10
+# --------------------------------------------------------------------------------
+
+# UI
+ui:
+  panel_size: 180
+  available_measurements:
+    # 4DSTEM: stem_4d
+    # Tomography: tomography
+    # EDX: edx_mapping
+    3DED: diffraction_tomography
+
+  load_controllers: true
+# --------------------------------------------------------------------------------
+
+# Data
+data:
+  save_metadata: true
+  measurement_size_memory_limit: 1 # GB
+
+  data_folder: ./data # absolute or relative to the root of the project
+  navigation_cache: ./data/navigation_map.h5 # absolute or relative to the root of the project
+  stem_4d_cache: ./data/survey_4d.h5 # absolute or relative to the root of the project
+# --------------------------------------------------------------------------------
+
+# Navigation
+navigation:
+  tile_n: 512
+  max_size: 4000 # um
+  max_zoom: 16
+
+  max_supertile: 8 # max number of tiles to be acquired at single stage position
+  max_fov: 313.75 # limit due to LM cropping
+
+  pixel_time: 0.3 # us
+
+  tile_overlap: 1
+  tile_overlap_add: 0
+
+  # tile_overlap: 1.25  # for registration, not used yet
+  # tile_overlap_add: int(tile_N*(tile_overlap - 1)/2)  # on side
+
+  show_interpolated: True
+
+  # for determining the order of tile acquisitions:
+  stage_fact: [4, 1.5] # prefered x direction since it is faster
+  center_fact: [1.5, 1.5]
+# --------------------------------------------------------------------------------
