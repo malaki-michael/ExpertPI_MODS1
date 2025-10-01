@@ -1,0 +1,35 @@
+# --index-url https://stem:ahAcA4wETAb4rQ_3eKmx@gitlab.tescan.com/api/v4/projects/84/packages/pypi/simple
+# --extra-index-url https://pypi.org/simple
+
+grpcio
+grpcio-tools
+ipython
+matplotlib>=3.7.1
+numba
+numpy<2
+opencv-python
+
+requests
+paho-mqtt>=2
+protobuf
+pillow
+pyopengl
+PySide6>=6.5
+pyqtgraph
+pymatgen
+pyaml
+scipy
+xraydb
+h5py
+hdf5plugin
+colorama
+prompt-toolkit
+easygui==0.98.3
+rosettasciio
+hyperspy
+natsort==8.4.0
+tqdm==4.65.0
+#torch==2.1.1
+
+# stem-measurements>=0.4.0
+# serving-manager>=0.5.2
