@@ -61,7 +61,7 @@ def basic_acquire(fov=None, scan_width=None, pixel_time=None, scan_rotation=None
     if scan_rotation == None:
         pass
     else:
-        scan_rotation = np.deg2rad(grpc_client.scanning.set_rotation(scan_rotation))
+        scan_rotation = grpc_client.scanning.set_rotation(np.deg2rad(scan_rotation))
     
     print("\n\t--Scan Conditions Set--")
 
