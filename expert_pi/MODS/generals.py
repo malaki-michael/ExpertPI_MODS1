@@ -160,10 +160,11 @@ def set_scope_conditions():
     
     if metadata["DF Collection Semi-angle innner, outer (mrad)"] == "Detector Not Used in Measurement":
         grpc_client.stem_detector.set_is_inserted(DT.HAADF, False)
+ 
+
     
     print("\nAll Conditions set except for scan width, dwell-time, and detector angles")
 
-    #TODO Ask Rob how to set the BF, and DF detetcor angles- cannot find grpc calls for this
     #TODO also ask if stage x,y,z should be moved
 
     
