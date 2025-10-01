@@ -20,7 +20,7 @@ def bin_data(dataset, blocksize, filename):
     print(f"\n\tThe shape of original data is {dataset.shape}")
     print(f"\n\tThe shape of downasampled data is {binned_data.shape}")
     np.save(filename+"_binned.npy", binned_data)
-    print("\n\t***Downsampled Datasaved saved***")
+    print("\n\tDownsampled Datasaved saved")
     return binned_data
 
 
@@ -34,6 +34,7 @@ def sliders(area, avgDPB, metadata =None):
     """ 
 
     if metadata == None:
+        print("\n\t---Waiting for User to Select Metadata---")
         filename = easygui.fileopenbox("Select Metadata File (.json)", "File Explorer")
         with open(filename, "r") as file:
             metadata = json.load(file)
@@ -48,7 +49,7 @@ def sliders(area, avgDPB, metadata =None):
     def get_angles():
         global inner_angle
         global outer_angle
-        if var1.get()>var2.get():
+        if var1.get()>=var2.get():
             print("\n\tIncorrect Angles selected: Inner angle should be greater than outer angle")
             main_window.destroy()
             sys.exit(0)
@@ -72,7 +73,7 @@ def sliders(area, avgDPB, metadata =None):
                         fg = "black")
     in_label.grid(row=0, column=0)
 
-    in_slider = tk.Scale(frame, orient="horizontal", from_= 5, to= 20, variable= var1)
+    in_slider = tk.Scale(frame, orient="horizontal", from_= np.round((1/cal_angle)*(np.sqrt(3)*area), 1), to= 20, variable= var1)  # from_ = np.round((1/cal_angle)*(np.sqrt(2)*area), 1)
     in_slider.grid(row=0, column=1)
 
     out_label = tk.Label(frame, text="Outer Angle",
@@ -92,8 +93,10 @@ def sliders(area, avgDPB, metadata =None):
                         font =("Sans", 10, "bold"),
                         fg ="red", command = quit_gui)
     quit_btn.grid(row=2, column=2)
+    print("\n\t---Waiting for User to Input Angular Ranges---")
 
     main_window.mainloop()
+    
 
     return inner_angle, outer_angle, cal_angle
         
@@ -106,6 +109,7 @@ def virtual_images(data = None):
     """
 
     if data ==None:
+        print("\n\t---Waiting for User to Select Dataset---")
         filename = easygui.fileopenbox("Select Dataset (.npy)", "File Explorer")
         data = np.load(filename)
 
@@ -135,7 +139,7 @@ def virtual_images(data = None):
     avg_intB = np.average(avgDPB)
 
     # code snippet to check the data initially both full size and binned to make sure binning has been properly done
-    print("\n\t***Plotting initial Images to validate***")
+    print("\n\t---Plotting initial Images to validate---")
     fig, ax = plt.subplots(2,2, figsize = (12,12))
     ax[0][0].imshow(avgDP, cmap ="gray", vmax= 10*avg_int)
     ax[0][0].set_title("Original DP")
@@ -149,7 +153,7 @@ def virtual_images(data = None):
     plt.show()
 
 
-    print("\n\t***Finding Center of DP***")
+    print("\n\t---Finding Center of DP---")
    # code snippet to find the central beam and radius
     blob = feature.blob_log(avgDPB, min_sigma =3, max_sigma = 6, threshold = 70)
     row, column, area = blob[0,:]
@@ -158,8 +162,23 @@ def virtual_images(data = None):
     
     x, y = np.indices((avgDPB.shape[0], avgDPB.shape[1]))
     
+    
+    
+    inner_angle = "Not defined"
+    while inner_angle == "Not defined":
+        inner_angle, outer_angle, cal_angle = sliders(area, avgDPB)
+    
+    print("\n\t---Angular Range Selected---")
+    print(f"\n\tInner Angle (mrad): {inner_angle}, Outer Angle (mrad):{outer_angle}")
+    if inner_angle != "Not Defined" or outer_angle != "Not Defined":
+        inner_angle_px = cal_angle*inner_angle
+        outer_angle_px = cal_angle*outer_angle
+    else:
+        sys.exit(0)
+    
+    print("\n\t---Calculating VBF and ADF Images---")
     # code snippet to generate BF image data 
-    bf_mask = (x-row)**2 + (y-column)**2 < (np.sqrt(3)*area)**2
+    bf_mask = (x-row)**2 + (y-column)**2 < inner_angle_px**2
     BF = np.zeros((avgImageB.shape[0], avgImageB.shape[1]))
 
     for i in range(0, avgDPB.shape[0]):
@@ -167,17 +186,8 @@ def virtual_images(data = None):
             if bf_mask[i,j]:
                 BF += binned_data[:,:,i,j]
     
-    print("\n\t***VBF Image Calculated***")
-
-    # code snippet to generate ADF images
-    inner_angle = "Not defined"
-    while inner_angle == "Not defined":
-        inner_angle, outer_angle, cal_angle = sliders(area, avgDPB)
     
-    print("\n\t***Angular Range Selected***")
-    print(f"\n\tInner Angle: {inner_angle} mrad, Outer Angle:{outer_angle} mrad")
-    inner_angle_px = cal_angle*inner_angle
-    outer_angle_px = cal_angle*outer_angle
+    # code snippet to generate ADF images
 
     mask_1 = (x-row)**2 + (y-column)**2 > inner_angle_px**2
     mask_2 = (x-row)**2 + (y-column)**2 < (0.5*outer_angle_px)**2
@@ -189,9 +199,7 @@ def virtual_images(data = None):
             if adf_mask[i,j]:
                 ADF += binned_data[:,:,i,j]
     
-    print("\n\t***ADF Image Calculated***")
-
-    print("\n\t***Plotting VBF and ADF Images**")
+    print("\n\t---Plotting VBF and ADF Images---")
 
     fig, ax = plt.subplots(2,2, figsize = (12,12))
     
